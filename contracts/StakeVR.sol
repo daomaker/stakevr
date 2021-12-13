@@ -30,12 +30,14 @@ contract StakeVR is ReentrancyGuard {
         uint128 amount,
         uint192 shares,
         uint48 lockTimestamp,
-        uint16 lockDays
+        uint16 lockDays,
+        uint192 totalShares
     );
 
     event EUnstake(
         address staker,
-        uint stakeIndex
+        uint stakeIndex,
+        uint192 totalShares
     );
 
     constructor(
@@ -66,7 +68,7 @@ contract StakeVR is ReentrancyGuard {
             lockDays
         ));
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit EStake(msg.sender, amount, shares, uint48(block.timestamp), lockDays);
+        emit EStake(msg.sender, amount, shares, uint48(block.timestamp), lockDays, totalShares);
     }
 
     function unstake(uint stakeIndex) external nonReentrant {
@@ -79,7 +81,7 @@ contract StakeVR is ReentrancyGuard {
         totalShares -= shares;
         stakeRef.unstaked = true;
         stakingToken.safeTransfer(msg.sender, stakeRef.amount);
-        emit EUnstake(msg.sender, stakeIndex);
+        emit EUnstake(msg.sender, stakeIndex, totalShares);
     }
 
     function calculateShares(
