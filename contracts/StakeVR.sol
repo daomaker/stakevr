@@ -93,7 +93,7 @@ contract StakeVR is ReentrancyGuard {
     ) {
         longTermBonus = amount * lockDays * shareBonusPerYear / 365 / HUNDRED_PERCENT;
         uint stakingMoreBonus = amount * amount * shareBonusPer1MTokens / 1e24 / HUNDRED_PERCENT;
-        shares = uint192((amount + longTermBonus + stakingMoreBonus));
+        shares = uint192(amount + longTermBonus + stakingMoreBonus);
     }
 
     function getStakerInfo(
