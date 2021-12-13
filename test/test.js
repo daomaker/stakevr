@@ -4,7 +4,7 @@ const { time } = require("@openzeppelin/test-helpers");
 describe("StakeVR contract", function() {
     let deployer, user1, user2, user3, contract, stakingToken, stakingTokenDecimals;
 
-    const PRECISION_LOSS = "10000000000000000";
+    const PRECISION_LOSS = "1000000000000000";
     
     const parseUnits = (value, decimals = stakingTokenDecimals) => {
         return ethers.utils.parseUnits(value.toString(), decimals);
@@ -41,10 +41,11 @@ describe("StakeVR contract", function() {
         await stakingToken.approve(contract.address, parseUnits(1e11));
     }
 
-    const stake = async(user, amount, lockDays, expectedShares, expectedLongTermBonus, expectedStakingMoreBonus) => {
+    const stake = async(user, amount, lockDays, expectedShares, expectedLongTermBonus) => {
         contract = contract.connect(user);
         amount = parseUnits(amount);
         expectedShares = parseUnits(expectedShares);
+        expectedLongTermBonus = parseUnits(expectedLongTermBonus);
         
         const totalSharesBefore = await contract.totalShares();
         const contractBalanceBefore = await stakingToken.balanceOf(contract.address);
@@ -54,8 +55,7 @@ describe("StakeVR contract", function() {
 
         const calculateSharesResult = await contract.calculateShares(amount, lockDays);
         expect(calculateSharesResult[0]).to.closeTo(expectedShares, PRECISION_LOSS);
-        expect(calculateSharesResult[1]).to.equal(expectedLongTermBonus);
-        expect(calculateSharesResult[2]).to.equal(expectedStakingMoreBonus);
+        expect(calculateSharesResult[1]).to.closeTo(expectedLongTermBonus, PRECISION_LOSS);
         expect(totalSharesAfter).to.equal(totalSharesBefore.add(calculateSharesResult[0]));
         expect(contractBalanceAfter).to.equal(contractBalanceBefore.add(amount));
 
@@ -121,19 +121,21 @@ describe("StakeVR contract", function() {
         });
         
         it("staking", async() => {
-            await stake(user1, 1, 30, 1.08, 82, 0);
-            await stake(user1, 1, 365, 2, 1000, 0);
-            await stake(user1, 10, 365, 20, 1000, 0);
-            await stake(user1, 1000, 365, 2001, 1000, 1);
+            await stake(user1, 1, 30, 1.083, 0.083);
+            await stake(user1, 1, 365, 2, 1);
+            await stake(user1, 10, 365, 20, 10);
+            await stake(user1, 1000, 365, 2001, 1000);
 
             const stakerInfo = await contract.getStakerInfo(user1.address);
-            expect(stakerInfo[0]).to.equal(parseUnits(1012));
-            expect(stakerInfo[1]).to.equal(parseUnits(2024.082));
+            expect(stakerInfo[0]).to.closeTo(parseUnits(1012), PRECISION_LOSS);
+            expect(stakerInfo[1]).to.closeTo(parseUnits(2024.082), PRECISION_LOSS);
 
-            await stake(user2, 1000000, 365, 3000000, 1000, 1000);
-            await stake(user2, 100, 730, 300, 2000, 0);
-            await stake(user3, 100, 3650, 1100, 10000, 0);
-            await stake(user3, 1000000000, 30, 1001082000000, 82, 1000000);
+            await stake(user2, 1000000, 365, 3000000, 1000000);
+            await stake(user2, 100, 730, 300.01, 200);
+            await stake(user2, 10000, 730, 30100, 20000);
+            await stake(user3, 100, 3650, 1100.01, 1000);
+            await stake(user3, 1000000000, 30, 1001082191780.822, 82191780.822);
+            await stake(user3, 2000000, 730, 10000000, 4000000);
         });
 
         it("unstaking", async() => {
@@ -153,7 +155,7 @@ describe("StakeVR contract", function() {
 
             const stakerInfo = await contract.getStakerInfo(user1.address);
             expect(stakerInfo[0]).to.equal(parseUnits(1010));
-            expect(stakerInfo[1]).to.equal(parseUnits(2021));
+            expect(stakerInfo[1]).to.closeTo(parseUnits(2021), PRECISION_LOSS);
 
             await unstake(user2, 0, false, false);
             await unstake(user2, 1, true, false);
@@ -164,7 +166,7 @@ describe("StakeVR contract", function() {
             await unstake(user3, 1, false, true);
             await unstake(user3, 0, false, false);
 
-            await stake(user2, 10000, 365, 20100, 1000, 10);
+            await stake(user2, 10000, 365, 20100, 10000);
         });
     });
 });

@@ -58,7 +58,7 @@ contract StakeVR is ReentrancyGuard {
 
     function stake(uint128 amount, uint16 lockDays) external nonReentrant {
         require(lockDays >= minLockDays && lockDays <= maxLockDays, "StakeVR: invalid lockDays");
-        (uint192 shares,,) = calculateShares(amount, lockDays);
+        (uint192 shares,) = calculateShares(amount, lockDays);
         totalShares += shares;
 
         stakers[msg.sender].push(Stake(
@@ -77,7 +77,7 @@ contract StakeVR is ReentrancyGuard {
         require(!stakeRef.unstaked, "StakeVR: unstaked already");
         require(stakeRef.lockTimestamp + uint48(stakeRef.lockDays) * 86400 <= block.timestamp, "StakeVR: unstaking too early");
 
-        (uint192 shares,,) = calculateShares(stakeRef.amount, stakeRef.lockDays);
+        (uint192 shares,) = calculateShares(stakeRef.amount, stakeRef.lockDays);
         totalShares -= shares;
         stakeRef.unstaked = true;
         stakingToken.safeTransfer(msg.sender, stakeRef.amount);
@@ -89,12 +89,11 @@ contract StakeVR is ReentrancyGuard {
         uint lockDays
     ) public view returns (
         uint192 shares,
-        uint longTermBonus,
-        uint stakingMoreBonus
+        uint longTermBonus
     ) {
-        longTermBonus = lockDays * shareBonusPerYear / 365;
-        stakingMoreBonus = amount * shareBonusPer1MTokens / 1e24;
-        shares = uint192(amount + amount * (longTermBonus + stakingMoreBonus) / HUNDRED_PERCENT);
+        longTermBonus = amount * lockDays * shareBonusPerYear / 365 / HUNDRED_PERCENT;
+        uint stakingMoreBonus = amount * amount * shareBonusPer1MTokens / 1e24 / HUNDRED_PERCENT;
+        shares = uint192((amount + longTermBonus + stakingMoreBonus));
     }
 
     function getStakerInfo(
@@ -108,7 +107,7 @@ contract StakeVR is ReentrancyGuard {
             if (stakeRef.unstaked) continue;
 
             totalStakeAmount += stakeRef.amount;
-            (uint192 shares,,) = calculateShares(stakeRef.amount, stakeRef.lockDays);
+            (uint192 shares,) = calculateShares(stakeRef.amount, stakeRef.lockDays);
             totalStakerShares += shares;
         }
     }
