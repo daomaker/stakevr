@@ -19,7 +19,6 @@ module.exports = {
         kovan: {
             url: `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`,
             accounts: [`0x${process.env.PRIVATE_KEY}`],
-            gasPrice: 1e9
         },
         mainnet: {
             url: `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
