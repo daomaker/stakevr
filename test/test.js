@@ -190,7 +190,7 @@ describe("StakeVR contract", function() {
         [deployer, user1, user2, user3] = await ethers.getSigners();
     });
 
-    /*describe("Full flow test", async() => {
+    describe("Full flow test", async() => {
         before(async() => {
             await init(
                 30,
@@ -254,7 +254,7 @@ describe("StakeVR contract", function() {
 
             await stake(user2, 10000, 365, 20100, 10000);
         });
-    });*/
+    });
 
     describe("Claiming test", async() => {
         before(async() => {
