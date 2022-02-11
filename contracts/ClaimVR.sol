@@ -94,15 +94,15 @@ contract ClaimVR is ReentrancyGuard {
         uint48 currentPassedMonthsCount = getPassedMonthsCount();
 
         if (prevPassedMonthsCount < currentPassedMonthsCount) {
-            uint rewards;
+            uint128 rewards;
             while (prevPassedMonthsCount++ < currentPassedMonthsCount) {
                 rewards += data[prevPassedMonthsCount - 1].reward;
             }
             prevPassedMonthsCount = passedMonthsCount;
 
-            uint totalShares = stakeVR.totalShares();
-            uint accRewardPerShare = prevPassedMonthsCount > 0 ? data[prevPassedMonthsCount - 1].accRewardPerShare : 0;
-            accRewardPerShare += rewards * ACC_REWARD_MULTIPLIER / totalShares;
+            uint192 totalShares = stakeVR.totalShares();
+            uint256 accRewardPerShare = prevPassedMonthsCount > 0 ? data[prevPassedMonthsCount - 1].accRewardPerShare : 0;
+            accRewardPerShare += ACC_REWARD_MULTIPLIER * rewards / totalShares;
 
             data[currentPassedMonthsCount - 1].accRewardPerShare = accRewardPerShare;
             passedMonthsCount = currentPassedMonthsCount;
