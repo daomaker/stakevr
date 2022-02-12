@@ -24,9 +24,9 @@ contract ClaimVR is ReentrancyGuard {
     mapping(address => Staker) public stakers;
     mapping(uint => Data) public data;
 
-    IERC20 public rewardToken;
-    StakeVR public stakeVR;
-    uint48 public startTime;
+    IERC20 immutable public rewardToken;
+    StakeVR immutable public stakeVR;
+    uint48 immutable public startTime;
     uint48 passedMonthsCount;
     
     event Claim(
