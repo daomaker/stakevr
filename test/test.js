@@ -49,6 +49,11 @@ describe("StakeVR contract", function() {
             startTime
         );
 
+        const latest = Number(await time.latest());
+        const monthTimestamps = [];
+        for (let i = 0; i < 100; i++) monthTimestamps.push(latest + 86400 * 30 * (i + 1));
+        await claimContract.addMonthTimestamps(monthTimestamps);
+
         expect(await claimContract.rewardToken()).to.equal(stakingToken.address);
         expect(await claimContract.stakeVR()).to.equal(contract.address);
         expect(await claimContract.startTime()).to.equal(startTime);

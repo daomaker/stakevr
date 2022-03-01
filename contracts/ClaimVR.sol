@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.4;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./StakeVR.sol";
 
-contract ClaimVR is ReentrancyGuard {
+import "hardhat/console.sol";
+
+contract ClaimVR is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint256 internal constant ACC_REWARD_MULTIPLIER = 1e36;
@@ -28,6 +31,7 @@ contract ClaimVR is ReentrancyGuard {
     StakeVR immutable public stakeVR;
     uint48 immutable public startTime;
     uint48 passedMonthsCount;
+    uint48[] public monthTimestamps;
     
     event Claim(
         address staker,
@@ -49,6 +53,12 @@ contract ClaimVR is ReentrancyGuard {
         stakeVR = _stakeVR;
         rewardToken = _rewardToken;
         startTime = _startTime;
+    }
+
+    function addMonthTimestamps(uint48[] calldata _monthTimestamps) external onlyOwner {
+        for (uint256 i = 0; i < _monthTimestamps.length; i++) {
+            monthTimestamps.push(_monthTimestamps[i]);
+        }
     }
 
     /** 
@@ -139,6 +149,8 @@ contract ClaimVR is ReentrancyGuard {
     function _getMonthForTimestamp(uint timestamp) private view returns (uint48) {
         if (timestamp < startTime) return 0;
 
-        return uint48((timestamp - startTime) / SECS_PER_MONTH) + 1;
+        uint48 i = 0;
+        while (i < monthTimestamps.length && timestamp >= monthTimestamps[i]) i++;
+        return i + 1;
     }
 }
